@@ -23,6 +23,7 @@ namespace speedText
     {
         int passesIn2Seconds = 0;
         DateTime secondsCount = DateTime.Now;
+        Brush foregroundColor;
         public MainWindow()
         {
             InitializeComponent();
@@ -33,10 +34,13 @@ namespace speedText
         {
             CreateButtons("QWERTYUIOP[]", SP1, Width, Height, FontSize);
             CreateButtons("ASDFGHJKL;'", SP2, Width, Height, FontSize);
-            CreateButtons("ZXCVBNM,./", SP3, Width, Height, FontSize);
+            CreateButtons("ZXCVBNM,.?", SP3, Width, Height, FontSize);
             var b = new Button() { Content = "SPACE", Width = Width*6, Height = Height, Focusable=false, FontSize = FontSize };
             b.Style = (Style)FindResource("MaterialDesignPaperButton");
             SP4.Children.Add(b);
+            foregroundColor = b.Foreground.Clone();
+
+
         }
 
         private void CreateButtons(string chars, StackPanel SP, int Width, int Height, int FontSize)
@@ -57,7 +61,7 @@ namespace speedText
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            paintTheButtonBackground(e, Colors.MediumPurple);
+            paintTheButtonBackground(e, new SolidColorBrush(Colors.MediumPurple), new SolidColorBrush(Colors.White));
             if (isRightKey(e))
             {
                 StringBuilder stringBuilder = new StringBuilder(tbText.Text);
@@ -69,13 +73,14 @@ namespace speedText
         }
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
-            paintTheButtonBackground(e, Colors.White);
+            paintTheButtonBackground(e, new SolidColorBrush(Colors.White), foregroundColor);
         }
 
         private void SliderDifficulty_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if(tbText.Text.Length > 0)
             {
+                TStart.IsChecked = false;
                 tbText.Text = tbText.Text.Remove(0, tbText.Text.Length);
             }
             randomLetterCreation();
@@ -128,9 +133,9 @@ namespace speedText
                 bool isSpace = false;
                 int w = rand.Next(5, 8);
                 int chars = rand.Next(97, 122 - (int)SliderDifficulty.Value);
-                while (tbText.Text.Length != 30)
+                while (tbText.Text.Length != 32)
                 {
-                    if (isSpace && tbText.Text.Length!= 29)
+                    if (isSpace && tbText.Text.Length!= 31)
                     {
                         tbText.Text += ' ';
                         w = rand.Next(5, 8);
@@ -150,14 +155,49 @@ namespace speedText
         }
 
 
-        private void paintTheButtonBackground(KeyEventArgs e, Color color)
+        private void paintTheButtonBackground(KeyEventArgs e, Brush color, Brush color2)
         {
             try
             {
-                if (e.Key.ToString() == "Space")
+                char sign;
+                string key = e.Key.ToString();
+                if (key == "Space")
                 {
-                    (SP4.Children[0] as Button).Background = new SolidColorBrush(color);
+                    (SP4.Children[0] as Button).Background = color;
+                    (SP4.Children[0] as Button).Foreground = color2;
                     return;
+                }
+                else if (key == "OemOpenBrackets")
+                {
+                    sign = '[';
+                }
+                else if (key == "Oem6")
+                {
+                    sign = ']';
+                }
+                else if (key == "OemQuotes")
+                {
+                    sign = '\'';
+                }
+                else if (key == "Oem1")
+                {
+                    sign = ';';
+                }
+                else if (key == "OemComma")
+                {
+                    sign = ',';
+                }
+                else if (key == "OemPeriod")
+                {
+                    sign = '.';
+                }
+                else if (key == "OemQuestion")
+                {
+                    sign = '?';
+                }
+                else
+                {
+                    sign = char.ToLower(key[0]);
                 }
                 List<StackPanel> SPes = new List<StackPanel>
             {
@@ -169,9 +209,10 @@ namespace speedText
                     {
                         if (item is Button)
                         {
-                            if ((item as Button).Content.ToString().ToLower() == char.ToLower(e.Key.ToString()[0]).ToString())
+                            if ((item as Button).Content.ToString().ToLower() == sign.ToString())
                             {
-                                (item as Button).Background = new SolidColorBrush(color);
+                                (item as Button).Background = color;
+                                (item as Button).Foreground = color2;
                                 break;
                             }
                         }
@@ -182,6 +223,14 @@ namespace speedText
             {
                 MessageBox.Show("Error with button coloring", "Eror", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void TStart_Checked(object sender, RoutedEventArgs e)
+        {
+            TBFails.Text = "0";
+            TBPasses.Text = "0";
+            TBPersentage.Text = "0 %";
+            TBSpeed.Text = "0 dig/min";
         }
     }
 }
